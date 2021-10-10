@@ -2141,7 +2141,7 @@ static int tavil_codec_enable_spkr_anc(struct snd_soc_dapm_widget *w,
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
 		ret = tavil_codec_enable_anc(w, kcontrol, event);
-		queue_delayed_work(system_power_efficient_wq, &tavil->spk_anc_dwork.dwork,
+		schedule_delayed_work(&tavil->spk_anc_dwork.dwork,
 				      msecs_to_jiffies(spk_anc_en_delay));
 		break;
 	case SND_SOC_DAPM_POST_PMD:
@@ -4704,11 +4704,11 @@ static int tavil_codec_enable_dec(struct snd_soc_dapm_widget *w,
 		snd_soc_component_update_bits(component, hpf_gate_reg,
 					0x02, 0x00);
 		/* schedule work queue to Remove Mute */
-		queue_delayed_work(system_power_efficient_wq, &tavil->tx_mute_dwork[decimator].dwork,
+		schedule_delayed_work(&tavil->tx_mute_dwork[decimator].dwork,
 				      msecs_to_jiffies(tx_unmute_delay));
 		if (tavil->tx_hpf_work[decimator].hpf_cut_off_freq !=
 							CF_MIN_3DB_150HZ)
-			queue_delayed_work(system_power_efficient_wq,
+			schedule_delayed_work(
 					&tavil->tx_hpf_work[decimator].dwork,
 					msecs_to_jiffies(300));
 		/* apply gain after decimator is enabled */
@@ -8116,16 +8116,16 @@ static const struct snd_soc_dapm_widget tavil_dapm_widgets[] = {
 	SND_SOC_DAPM_INPUT("AMIC4"),
 	SND_SOC_DAPM_INPUT("AMIC5"),
 
-	SND_SOC_DAPM_MICBIAS_E("MIC BIAS1", SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY("MIC BIAS1", SND_SOC_NOPM, 0, 0,
 		tavil_codec_enable_micbias, SND_SOC_DAPM_PRE_PMU |
 		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
-	SND_SOC_DAPM_MICBIAS_E("MIC BIAS2", SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY("MIC BIAS2", SND_SOC_NOPM, 0, 0,
 		tavil_codec_enable_micbias, SND_SOC_DAPM_PRE_PMU |
 		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
-	SND_SOC_DAPM_MICBIAS_E("MIC BIAS3", SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY("MIC BIAS3", SND_SOC_NOPM, 0, 0,
 		tavil_codec_enable_micbias, SND_SOC_DAPM_PRE_PMU |
 		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
-	SND_SOC_DAPM_MICBIAS_E("MIC BIAS4", SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY("MIC BIAS4", SND_SOC_NOPM, 0, 0,
 		tavil_codec_enable_micbias, SND_SOC_DAPM_PRE_PMU |
 		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
 
@@ -8137,16 +8137,16 @@ static const struct snd_soc_dapm_widget tavil_dapm_widgets[] = {
 		0, 0, tavil_codec_reset_hph_registers,
 		SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
 
-	SND_SOC_DAPM_MICBIAS_E(DAPM_MICBIAS1_STANDALONE, SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY(DAPM_MICBIAS1_STANDALONE, SND_SOC_NOPM, 0, 0,
 		tavil_codec_force_enable_micbias,
 		SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
-	SND_SOC_DAPM_MICBIAS_E(DAPM_MICBIAS2_STANDALONE, SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY(DAPM_MICBIAS2_STANDALONE, SND_SOC_NOPM, 0, 0,
 		tavil_codec_force_enable_micbias,
 		SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
-	SND_SOC_DAPM_MICBIAS_E(DAPM_MICBIAS3_STANDALONE, SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY(DAPM_MICBIAS3_STANDALONE, SND_SOC_NOPM, 0, 0,
 		tavil_codec_force_enable_micbias,
 		SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
-	SND_SOC_DAPM_MICBIAS_E(DAPM_MICBIAS4_STANDALONE, SND_SOC_NOPM, 0, 0,
+	SND_SOC_DAPM_SUPPLY(DAPM_MICBIAS4_STANDALONE, SND_SOC_NOPM, 0, 0,
 		tavil_codec_force_enable_micbias,
 		SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
 
@@ -9318,7 +9318,7 @@ static int tavil_dig_core_power_collapse(struct tavil_priv *tavil,
 
 	if (req_state == POWER_COLLAPSE) {
 		if (tavil->power_active_ref == 0) {
-			queue_delayed_work(system_power_efficient_wq, &tavil->power_gate_work,
+			schedule_delayed_work(&tavil->power_gate_work,
 			msecs_to_jiffies(dig_core_collapse_timer * 1000));
 		}
 	} else if (req_state == POWER_RESUME) {
@@ -9485,7 +9485,7 @@ int tavil_codec_info_create_codec_entry(struct snd_info_entry *codec_root,
 
 	tavil = snd_soc_component_get_drvdata(component);
 	card = component->card;
-	tavil->entry = snd_info_create_subdir(codec_root->module,
+	tavil->entry = snd_info_create_module_entry(codec_root->module,
 					      "tavil", codec_root);
 	if (!tavil->entry) {
 		dev_dbg(component->dev, "%s: failed to create wcd934x entry\n",
@@ -10356,7 +10356,7 @@ static int tavil_post_reset_cb(struct wcd9xxx *wcd9xxx)
 
 	component = (struct snd_soc_component *)(wcd9xxx->ssr_priv);
 	if (!component->card) {
-		dev_err(codec->dev, "%s: sound card is not enumerated.\n",
+		dev_err(component->dev, "%s: sound card is not enumerated.\n",
 			__func__);
 		return -EINVAL;
 	}
