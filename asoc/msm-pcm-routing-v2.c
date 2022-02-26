@@ -3780,7 +3780,7 @@ static int msm_routing_lsm_func_put(struct snd_kcontrol *kcontrol,
 	return afe_port_set_mad_type(port_id, mad_type);
 }
 
-static const char *const adm_override_chs_text[] = {"Zero", "One", "Two", "Three", "Four"};
+static const char *const adm_override_chs_text[] = {"Zero", "One", "Two"};
 
 static SOC_ENUM_SINGLE_EXT_DECL(adm_override_chs,
 				adm_override_chs_text);
@@ -3795,8 +3795,6 @@ static int msm_routing_adm_get_backend_idx(struct snd_kcontrol *kcontrol)
 		backend_id = MSM_BACKEND_DAI_SLIMBUS_9_TX;
 	} else if (strnstr(kcontrol->id.name, "SLIM7_TX", sizeof("SLIM7_TX"))) {
 		backend_id = MSM_BACKEND_DAI_SLIMBUS_7_TX;
-	} else if (strnstr(kcontrol->id.name, "TERT_TDM_TX_0", sizeof("TERT_TDM_TX_0"))) {
-		backend_id = MSM_BACKEND_DAI_TERT_TDM_TX_0;
 	} else {
 		pr_err("%s: unsupported backend id: %s",
 			__func__, kcontrol->id.name);
@@ -3851,9 +3849,6 @@ static const struct snd_kcontrol_new adm_channel_config_controls[] = {
 			msm_routing_adm_channel_config_get,
 			msm_routing_adm_channel_config_put),
 	SOC_ENUM_EXT("SLIM7_TX ADM Channels", adm_override_chs,
-			msm_routing_adm_channel_config_get,
-			msm_routing_adm_channel_config_put),
-	SOC_ENUM_EXT("TERT_TDM_TX_0 ADM Channels", adm_override_chs,
 			msm_routing_adm_channel_config_get,
 			msm_routing_adm_channel_config_put),
 };
@@ -6189,7 +6184,7 @@ static const struct soc_enum msm_route_ec_ref_params_enum[] = {
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(ec_ref_rate_text), ec_ref_rate_text),
 };
 
-static const char *const ec_ref_rx[] = { "None", "SLIM_RX", "I2S_RX",
+static const char *const ec_ref_rx[] = { "None", "SLIM_RX", "PRI_MI2S_RX",
 	"PRI_MI2S_TX", "SEC_MI2S_TX",
 	"TERT_MI2S_TX", "QUAT_MI2S_TX", "SEC_I2S_RX", "PROXY_RX",
 	"SLIM_5_RX", "SLIM_1_TX", "QUAT_TDM_TX_1",
@@ -26202,6 +26197,12 @@ static const struct snd_kcontrol_new mmul10_mixer_controls[] = {
 	MSM_BACKEND_DAI_TERTIARY_MI2S_TX,
 	MSM_FRONTEND_DAI_MULTIMEDIA10, 1, 0, msm_routing_get_audio_mixer,
 	msm_routing_put_audio_mixer),
+	/* ASUS_BSP Paul +++ */
+	SOC_DOUBLE_EXT("QUAT_MI2S_TX", SND_SOC_NOPM,
+	MSM_BACKEND_DAI_QUATERNARY_MI2S_TX,
+	MSM_FRONTEND_DAI_MULTIMEDIA10, 1, 0, msm_routing_get_audio_mixer,
+	msm_routing_put_audio_mixer),
+	/* ASUS_BSP Paul --- */
 	SOC_DOUBLE_EXT("INT2_MI2S_TX", SND_SOC_NOPM,
 	MSM_BACKEND_DAI_INT2_MI2S_TX,
 	MSM_FRONTEND_DAI_MULTIMEDIA10, 1, 0, msm_routing_get_audio_mixer,
@@ -40356,6 +40357,7 @@ static const struct snd_soc_dapm_route intercon_tdm[] = {
 	{"AUDIO_REF_EC_UL1 MUX", "QUIN_TDM_TX_0", "QUIN_TDM_TX_0"},
 	{"AUDIO_REF_EC_UL1 MUX", "PRI_TDM_RX_0", "PRI_TDM_RX_0"},
 	{"AUDIO_REF_EC_UL1 MUX", "PRI_TDM_TX_0", "PRI_TDM_TX_0"},
+	{"AUDIO_REF_EC_UL1 MUX", "PRI_MI2S_RX", "PRI_MI2S_RX"},
 
 	{"AUDIO_REF_EC_UL10 MUX", "QUAT_TDM_TX_1", "QUAT_TDM_TX_1"},
 	{"AUDIO_REF_EC_UL10 MUX", "QUAT_TDM_RX_0", "QUAT_TDM_RX_0"},
@@ -40366,6 +40368,7 @@ static const struct snd_soc_dapm_route intercon_tdm[] = {
 	{"AUDIO_REF_EC_UL10 MUX", "SEC_TDM_TX_0", "SEC_TDM_TX_0"},
 	{"AUDIO_REF_EC_UL10 MUX", "PRI_TDM_RX_0", "PRI_TDM_RX_0"},
 	{"AUDIO_REF_EC_UL10 MUX", "PRI_TDM_TX_0", "PRI_TDM_TX_0"},
+	{"AUDIO_REF_EC_UL10 MUX", "PRI_MI2S_RX", "PRI_MI2S_RX"},
 
 	{"LSM1 Mixer", "QUIN_TDM_TX_0", "QUIN_TDM_TX_0"},
 	{"LSM1 Mixer", "TERT_TDM_TX_0", "TERT_TDM_TX_0"},
@@ -42227,30 +42230,20 @@ static int get_drift_src_idx(int drift_src)
 {
 	if (drift_src == DRIFT_SRC_SW)
 		return DRIFT_SRC_SW;
-	else if (((drift_src >= AFE_PORT_ID_PRIMARY_TDM_RX)
+	else if ((drift_src >= AFE_PORT_ID_PRIMARY_TDM_RX)
 		&& (drift_src <= AFE_PORT_ID_PRIMARY_TDM_TX_7))
-		|| (drift_src == AFE_PORT_ID_PRIMARY_MI2S_RX)
-		|| (drift_src == AFE_PORT_ID_PRIMARY_MI2S_TX))
 		return DRIFT_SRC_AFE_PRI;
-	else if (((drift_src >= AFE_PORT_ID_SECONDARY_TDM_RX)
+	else if ((drift_src >= AFE_PORT_ID_SECONDARY_TDM_RX)
 		&& (drift_src <= AFE_PORT_ID_SECONDARY_TDM_TX_7))
-		|| (drift_src == AFE_PORT_ID_SECONDARY_MI2S_RX)
-		|| (drift_src == AFE_PORT_ID_SECONDARY_MI2S_TX))
 		return DRIFT_SRC_AFE_SEC;
-	else if (((drift_src >= AFE_PORT_ID_TERTIARY_TDM_RX)
+	else if ((drift_src >= AFE_PORT_ID_TERTIARY_TDM_RX)
 		&& (drift_src <= AFE_PORT_ID_TERTIARY_TDM_TX_7))
-		|| (drift_src == AFE_PORT_ID_TERTIARY_MI2S_RX)
-		|| (drift_src == AFE_PORT_ID_TERTIARY_MI2S_TX))
 		return DRIFT_SRC_AFE_TERT;
-	else if (((drift_src >= AFE_PORT_ID_QUATERNARY_TDM_RX)
+	else if ((drift_src >= AFE_PORT_ID_QUATERNARY_TDM_RX)
 		&& (drift_src <= AFE_PORT_ID_QUATERNARY_TDM_TX_7))
-		|| (drift_src == AFE_PORT_ID_QUATERNARY_MI2S_RX)
-		|| (drift_src == AFE_PORT_ID_QUATERNARY_MI2S_TX))
 		return DRIFT_SRC_AFE_QUAT;
-	else if (((drift_src >= AFE_PORT_ID_QUINARY_TDM_RX)
+	else if ((drift_src >= AFE_PORT_ID_QUINARY_TDM_RX)
 		&& (drift_src <= AFE_PORT_ID_QUINARY_TDM_TX_7))
-		|| (drift_src == AFE_PORT_ID_QUINARY_MI2S_RX)
-		|| (drift_src == AFE_PORT_ID_QUINARY_MI2S_TX))
 		return DRIFT_SRC_AFE_QUIN;
 	else
 		return -EINVAL;

@@ -50,7 +50,7 @@ static int cs35l45_fast_switch_en_get(struct snd_kcontrol *kcontrol,
 		snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s: fast_switch_en = %d\n", __func__, cs35l45->fast_switch_en);
-	
+
 	ucontrol->value.integer.value[0] = cs35l45->fast_switch_en;
 
 	return 0;
@@ -221,7 +221,7 @@ static int cs35l45_fast_switch_en_put(struct snd_kcontrol *kcontrol,
 		snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s: fast_switch_en = %ld\n", __func__, ucontrol->value.integer.value[0]);
-	
+
 	if (!cs35l45->fast_switch_en && ucontrol->value.integer.value[0])
 		/*
 		 * Rising on fast switch enable
@@ -245,7 +245,7 @@ static int cs35l45_fast_switch_file_put(struct snd_kcontrol *kcontrol,
 	unsigned int		i = ucontrol->value.enumerated.item[0];
 
 	dev_dbg(cs35l45->dev, "%s: fast_switch_file_idx = %u\n", __func__, i);
-	
+
 	soc_enum = (struct soc_enum *)kcontrol->private_value;
 
 	if (i >= soc_enum->items) {
@@ -267,7 +267,7 @@ static int cs35l45_fast_switch_file_get(struct snd_kcontrol *kcontrol,
 		snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s: fast_switch_file_idx = %u\n", __func__, cs35l45->fast_switch_file_idx);
-	
+
 	ucontrol->value.enumerated.item[0] = cs35l45->fast_switch_file_idx;
 
 	return 0;
@@ -292,7 +292,7 @@ static void cs35l45_dsp_pmd_work(struct work_struct *work)
 	unsigned int pll_sts, pwr_sts, timeout;
 
 	dev_dbg(cs35l45->dev, "%s: PLL_FORCE_EN to be disabled\n", __func__);
-	
+
 	mutex_lock(&cs35l45->dsp_pmd_lock);
 
 	timeout = 50;
@@ -314,7 +314,7 @@ static void cs35l45_dsp_pmd_work(struct work_struct *work)
 				   CS35L45_PLL_FORCE_EN_MASK, 0);
 
 	mutex_unlock(&cs35l45->dsp_pmd_lock);
-	
+
 	dev_dbg(cs35l45->dev, "%s: PLL_FORCE_EN is disabled\n", __func__);
 }
 
@@ -409,7 +409,7 @@ static int cs35l45_dsp_loader_ev(struct snd_soc_dapm_widget *w,
 		snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s: event = 0x%x\n", __func__, event);
-	
+
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
 		if (cs35l45->dsp.booted) {
@@ -446,7 +446,7 @@ static int cs35l45_dsp_boot_ev(struct snd_soc_dapm_widget *w,
 	#endif
 
 	dev_dbg(cs35l45->dev, "%s: event = 0x%x\n", __func__, event);
-	
+
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
 		if (!cs35l45->dsp.booted) {
@@ -543,7 +543,7 @@ static int cs35l45_dsp_power_ev(struct snd_soc_dapm_widget *w,
 	int ret = 0;
 
 	dev_dbg(cs35l45->dev, "%s: event = 0x%x\n", __func__, event);
-	
+
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
 		if (!cs35l45->dsp.running) {
@@ -597,7 +597,7 @@ static int cs35l45_global_en_ev(struct snd_soc_dapm_widget *w,
 	int ret = 0;
 
 	dev_dbg(cs35l45->dev, "%s: event = 0x%x\n", __func__, event);
-	
+
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
 		regmap_write(cs35l45->regmap, CS35L45_GLOBAL_ENABLES,
@@ -1090,7 +1090,7 @@ static int cs35l45_dsp_boot_get(struct snd_kcontrol *kcontrol,
 	unsigned int val;
 
 	dev_dbg(component->dev, "%s\n", __func__);
-	
+
 	val = snd_soc_component_get_pin_status(component, "DSP1 Enable");
 
 	ucontrol->value.integer.value[0] = (val > 0) ? 1 : 0;
@@ -1109,7 +1109,7 @@ static int cs35l45_dsp_boot_put(struct snd_kcontrol *kcontrol,
 			snd_soc_component_get_dapm(component);
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	if (!cs35l45->dsp.booted) {
 		dev_err(cs35l45->dev, "Preload DSP before boot\n");
 		return -EPERM;
@@ -1165,7 +1165,7 @@ static int cs35l45_amp_register_dump_put(struct snd_kcontrol *kcontrol,
 	unsigned int val;
 	int i, reg_max, reg_stride;
 	int ret;
-	
+
 	dev_dbg(cs35l45->dev, "%s: register_dump = %lu\n", __func__, ucontrol->value.integer.value[0]);
 
 	if (ucontrol->value.integer.value[0]) {
@@ -1176,7 +1176,7 @@ static int cs35l45_amp_register_dump_put(struct snd_kcontrol *kcontrol,
 
 		reg_max = (1 == ucontrol->value.integer.value[0]) ? CS35L45_CLOCK_DETECT_1 : ret;
 		reg_stride = regmap_get_reg_stride(map);
-			
+
 		regcache_cache_bypass(map, true);
 		for (i = 0; reg_max >= i; i += reg_stride) {
 			if (!cs35l45_readable_reg(cs35l45->dev, i))
@@ -1193,7 +1193,7 @@ static int cs35l45_amp_register_dump_put(struct snd_kcontrol *kcontrol,
 		}
 		regcache_cache_bypass(map, false);
 	}
-	
+
 	return 0;
 }
 #endif
@@ -1228,9 +1228,9 @@ static int cs35l45_sync_num_devices_get(struct snd_kcontrol *kcontrol,
 			snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s: sync_num_devices = %u\n", __func__, cs35l45->sync_num_devices);
-	
+
 	ucontrol->value.integer.value[0] = cs35l45->sync_num_devices;
-	
+
 	return 0;
 }
 
@@ -1245,7 +1245,7 @@ static int cs35l45_sync_num_devices_put(struct snd_kcontrol *kcontrol,
 	int ret;
 
 	dev_dbg(cs35l45->dev, "%s: sync_num_devices = %lu\n", __func__, ucontrol->value.integer.value[0]);
-	
+
 	if (!cs35l45->dsp.running) {
 		dev_err(cs35l45->dev, "DSP not running\n");
 		return -EPERM;
@@ -1273,9 +1273,9 @@ static int cs35l45_sync_id_get(struct snd_kcontrol *kcontrol,
 			snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s: sync_id = %u\n", __func__, cs35l45->sync_id);
-	
+
 	ucontrol->value.integer.value[0] = cs35l45->sync_id;
-	
+
 	return 0;
 }
 
@@ -1290,7 +1290,7 @@ static int cs35l45_sync_id_put(struct snd_kcontrol *kcontrol,
 	int ret;
 
 	dev_dbg(cs35l45->dev, "%s: sync_id = %lu\n", __func__, ucontrol->value.integer.value[0]);
-	
+
 	if (!cs35l45->dsp.running) {
 		dev_err(cs35l45->dev, "DSP not running\n");
 		return -EPERM;
@@ -1326,7 +1326,7 @@ static int cs35l45_dsp_prepare_reconfig_put(struct snd_kcontrol *kcontrol,
 			snd_soc_component_get_drvdata(component);
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	if (!cs35l45->dsp.running) {
 		dev_err(cs35l45->dev, "DSP not running\n");
 		return -EPERM;
@@ -1339,7 +1339,7 @@ static int cs35l45_dsp_prepare_reconfig_put(struct snd_kcontrol *kcontrol,
 		     CSPL_MBOX_CMD_PREPARE_RECONFIGURATION);
 
 	usleep_range(5000, 5100);
-	
+
 	return 0;
 }
 
@@ -1383,7 +1383,7 @@ static int cs35l45_dsp_apply_reconfig_put(struct snd_kcontrol *kcontrol,
 	int ret = 0;
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	if (!cs35l45->dsp.running) {
 		dev_err(cs35l45->dev, "DSP not running\n");
 		return -EPERM;
@@ -1534,7 +1534,7 @@ static int cs35l45_dai_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	unsigned int asp_fmt, fsync_inv, bclk_inv, master_mode;
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBM_CFM:
 		master_mode = 1;
@@ -1675,7 +1675,7 @@ static int cs35l45_dai_hw_params(struct snd_pcm_substream *substream,
 			    cs35l45->slot_width : params_physical_width(params);
 
 	dev_dbg(cs35l45->dev, "%s: fs=%d, asp_wl=%d, asp_width=%d\n", __func__, params_rate(params), asp_wl, asp_width);
-	
+
 	// TDM
 	//cs35l45_component_set_sysclk(dai->component, 0, 0, 8 * params_rate(params) * asp_width, 0);
 	// I2S
@@ -1711,7 +1711,7 @@ static int cs35l45_dai_set_tdm_slot(struct snd_soc_dai *dai,
 			snd_soc_component_get_drvdata(dai->component);
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	cs35l45->slot_width = slot_width;
 
 	return 0;
@@ -1724,7 +1724,7 @@ static int cs35l45_dai_set_sysclk(struct snd_soc_dai *dai,
 			snd_soc_component_get_drvdata(dai->component);
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	return cs35l45_set_sysclk(cs35l45, clk_id, freq);
 }
 
@@ -1735,7 +1735,7 @@ static int cs35l45_dai_startup(struct snd_pcm_substream *substream,
 			snd_soc_component_get_drvdata(dai->component);
 
 	dev_dbg(cs35l45->dev, "%s\n", __func__);
-	
+
 	// TDM
 	//cs35l45_dai_set_fmt(dai, SND_SOC_DAIFMT_CBS_CFS|SND_SOC_DAIFMT_DSP_A);
 	// I2S
@@ -2017,7 +2017,7 @@ static int cs35l45_set_sysclk(struct cs35l45_private *cs35l45, int clk_id,
 	}
 
 	dev_dbg(cs35l45->dev, "%s: clk_id = %d, freq = %u, update PLL setting!!!\n", __func__, clk_id, freq);
-	
+
 	regmap_update_bits(cs35l45->regmap, CS35L45_REFCLK_INPUT,
 			   CS35L45_PLL_OPEN_LOOP_MASK,
 			   CS35L45_PLL_OPEN_LOOP_MASK);
@@ -2196,7 +2196,7 @@ static irqreturn_t cs35l45_irq(int irq, void *data)
 
 	irq_detect = false;
 	for (i = 0; i < ARRAY_SIZE(cs35l45_irq_mons); i++) {
-		dev_err(cs35l45->dev, "%s: reading cs35l45_irq_mons[%d]\n", __func__, i); /* ASUS_BSP Paul +++ */
+		// dev_err(cs35l45->dev, "%s: reading cs35l45_irq_mons[%d]\n", __func__, i); /* ASUS_BSP Paul +++ */
 		regmap_read(cs35l45->regmap, cs35l45_irq_mons[i].reg, &val);
 		if (!(val & cs35l45_irq_mons[i].bitmask))
 			continue;
@@ -2960,19 +2960,19 @@ static int __cs35l45_initialize(struct cs35l45_private *cs35l45)
 	#endif
 
 	// Workaround: To change boost LDPM config
-	#if 1	
+	#if 1
 	regmap_write(cs35l45->regmap, CS35L45_BOOST_LPMODE_CFG, 0x3);
 	#endif
-	
+
 	// Workaround: Preset PLL clock once in early stage without AP clock
 	#if 1
 	cs35l45_set_sysclk(cs35l45, 0, 3072000);
 	#endif
-	
+
 	/*
 	 * Workarounds end.
 	 */
-	 
+
 	cs35l45->initialized = true;
 
 	return 0;

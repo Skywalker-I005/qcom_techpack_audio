@@ -3055,7 +3055,7 @@ static int afe_send_hw_delay(u16 port_id, u32 rate)
 		       __func__, port_id, ret);
 
 fail_cmd:
-	pr_info("%s: port_id 0x%x rate %u delay_usec %d status %d\n",
+	pr_debug("%s: port_id 0x%x rate %u delay_usec %d status %d\n",
 	__func__, port_id, rate, delay_entry.delay_usec, ret);
 	return ret;
 }
@@ -3153,7 +3153,7 @@ static int afe_get_cal_topology_id(u16 port_id, u32 *topology_id,
 	*topology_id = (u32)afe_top_info->topology;
 	cal_utils_mark_cal_used(cal_block);
 
-	pr_info("%s: port_id = 0x%x acdb_id = %d topology_id = 0x%x cal_type_index=%d ret=%d\n",
+	pr_debug("%s: port_id = 0x%x acdb_id = %d topology_id = 0x%x cal_type_index=%d ret=%d\n",
 		__func__, port_id, afe_top_info->acdb_id,
 		afe_top_info->topology, cal_type_index, ret);
 unlock:
@@ -3460,11 +3460,6 @@ int afe_send_port_vad_cfg_params(u16 port_id)
 		return 0;
 	}
 
-	ret = afe_validate_port(port_id);
-	if (ret < 0) {
-		pr_err("%s: Not a valid port id = 0x%x ret %d\n", __func__,
-		       port_id, ret);
-	}
 	port_index = afe_get_port_index(port_id);
 
 	if (this_afe.vad_cfg[port_index].is_enable) {
@@ -3615,7 +3610,7 @@ static struct cal_block_data *afe_find_cal(int cal_index, int port_id)
 			goto exit;
 		}
 	}
-	pr_info("%s: no matching cal_block found\n", __func__);
+	pr_debug("%s: no matching cal_block found\n", __func__);
 	cal_block = NULL;
 
 exit:
@@ -3674,7 +3669,7 @@ static int send_afe_cal_type(int cal_index, int port_id)
 	}
 	ret = afe_send_cal_block(port_id, cal_block);
 	if (ret < 0)
-		pr_err("%s: No cal sent for cal_index %d, port_id = 0x%x! ret %d\n",
+		pr_debug("%s: No cal sent for cal_index %d, port_id = 0x%x! ret %d\n",
 			__func__, cal_index, port_id, ret);
 
 	cal_utils_mark_cal_used(cal_block);
@@ -4691,16 +4686,9 @@ EXPORT_SYMBOL(afe_tdm_port_start);
 void afe_set_cal_mode(u16 port_id, enum afe_cal_mode afe_cal_mode)
 {
 	uint16_t port_index;
-	int ret = 0;
 
-	ret = afe_validate_port(port_id);
-	if (ret < 0) {
-		pr_err("%s: Not a valid port id = 0x%x ret %d\n", __func__,
-		       port_id, ret);
-	} else {
-		port_index = afe_get_port_index(port_id);
-		this_afe.afe_cal_mode[port_index] = afe_cal_mode;
-	}
+	port_index = afe_get_port_index(port_id);
+	this_afe.afe_cal_mode[port_index] = afe_cal_mode;
 }
 EXPORT_SYMBOL(afe_set_cal_mode);
 
@@ -4735,17 +4723,10 @@ EXPORT_SYMBOL(afe_set_vad_cfg);
 void afe_get_island_mode_cfg(u16 port_id, u32 *enable_flag)
 {
 	uint16_t port_index;
-	int ret = 0;
 
-	ret = afe_validate_port(port_id);
-	if (ret < 0) {
-		pr_err("%s: Not a valid port id = 0x%x ret %d\n", __func__,
-		       port_id, ret);
-	} else {
-		if (enable_flag) {
-			port_index = afe_get_port_index(port_id);
-			*enable_flag = this_afe.island_mode[port_index];
-		}
+	if (enable_flag) {
+		port_index = afe_get_port_index(port_id);
+		*enable_flag = this_afe.island_mode[port_index];
 	}
 }
 EXPORT_SYMBOL(afe_get_island_mode_cfg);
@@ -4761,19 +4742,12 @@ EXPORT_SYMBOL(afe_get_island_mode_cfg);
 void afe_set_island_mode_cfg(u16 port_id, u32 enable_flag)
 {
 	uint16_t port_index;
-	int ret = 0;
 
-	ret = afe_validate_port(port_id);
-	if (ret < 0) {
-		pr_err("%s: Not a valid port id = 0x%x ret %d\n", __func__,
-		       port_id, ret);
-	} else {
-		port_index = afe_get_port_index(port_id);
-		this_afe.island_mode[port_index] = enable_flag;
+	port_index = afe_get_port_index(port_id);
+	this_afe.island_mode[port_index] = enable_flag;
 
-		trace_printk("%s: set island mode cfg 0x%x for port 0x%x\n",
-				__func__, this_afe.island_mode[port_index], port_id);
-	}
+	trace_printk("%s: set island mode cfg 0x%x for port 0x%x\n",
+			__func__, this_afe.island_mode[port_index], port_id);
 }
 EXPORT_SYMBOL(afe_set_island_mode_cfg);
 
@@ -8057,8 +8031,6 @@ int afe_register_get_events(u16 port_id,
 
 	pr_debug("%s: port_id: 0x%x\n", __func__, port_id);
 
-	memset(&rtproxy, 0, sizeof(rtproxy));
-
 	if (this_afe.apr == NULL) {
 		this_afe.apr = apr_register("ADSP", "AFE", afe_callback,
 					0xFFFFFFFF, &this_afe);
@@ -8121,8 +8093,6 @@ int afe_unregister_get_events(u16 port_id)
 	uint16_t i = 0;
 
 	pr_debug("%s:\n", __func__);
-
-	memset(&rtproxy, 0, sizeof(rtproxy));
 
 	if (this_afe.apr == NULL) {
 		this_afe.apr = apr_register("ADSP", "AFE", afe_callback,
@@ -8208,8 +8178,6 @@ int afe_rt_proxy_port_write(phys_addr_t buf_addr_p,
 	int ret = 0;
 	struct afe_port_data_cmd_rt_proxy_port_write_v2 afecmd_wr;
 
-	memset(&afecmd_wr, 0, sizeof(afecmd_wr));
-
 	if (this_afe.apr == NULL) {
 		pr_err("%s: register to AFE is not done\n", __func__);
 		ret = -ENODEV;
@@ -8268,8 +8236,6 @@ int afe_rt_proxy_port_read(phys_addr_t buf_addr_p,
 	int ret = 0;
 	struct afe_port_data_cmd_rt_proxy_port_read_v2 afecmd_rd;
 	int port_id = VIRTUAL_ID_TO_PORTID(id);
-
-	memset(&afecmd_rd, 0, sizeof(afecmd_rd));
 
 	if (this_afe.apr == NULL) {
 		pr_err("%s: register to AFE is not done\n", __func__);
@@ -8510,8 +8476,6 @@ int afe_dtmf_generate_rx(int64_t duration_in_ms,
 	struct afe_dtmf_generation_command cmd_dtmf;
 
 	pr_debug("%s: DTMF AFE Gen\n", __func__);
-
-	memset(&cmd_dtmf, 0, sizeof(cmd_dtmf));
 
 	if (afe_validate_port(this_afe.dtmf_gen_rx_portid) < 0) {
 		pr_err("%s: Failed : Invalid Port id = 0x%x\n",
@@ -9259,8 +9223,6 @@ int afe_port_stop_nowait(int port_id)
 	struct afe_port_cmd_device_stop stop;
 	int ret = 0;
 
-	memset(&stop, 0, sizeof(stop));
-
 	if (this_afe.apr == NULL) {
 		pr_err("%s: AFE is already closed\n", __func__);
 		ret = -EINVAL;
@@ -9303,8 +9265,6 @@ int afe_close(int port_id)
 	u16 i;
 	int index = 0;
 	uint16_t port_index;
-
-	memset(&stop, 0, sizeof(stop));
 
 	if (this_afe.apr == NULL) {
 		pr_err("%s: AFE is already closed\n", __func__);
